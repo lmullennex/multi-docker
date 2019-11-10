@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install
+  - docker build -t lmullennex/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true lmullennex/react-test npm test
+
+after_success:
+  - docker build -t lmullennex/multi-client ./client
+  - docker build -t lmullennex/multi-nginx ./nginx
+  - docker build -t lmullennex/multi-server ./server
+  - docker build -t lmullennex/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push lmullennex/multi-client
+  - docker push lmullennex/multi-nginx
+  - docker push lmullennex/multi-server
+  - docker push lmullennex/multi-worker
